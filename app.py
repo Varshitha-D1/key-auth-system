@@ -120,9 +120,33 @@ def login():
                     datetime.now() + timedelta(minutes=5)
                 ).isoformat()
 
-                return "Too many login attempts. Account locked for 5 minutes."
+                return """
+<h2 style='text-align:center; color:red; margin-top:100px; font-size:32px;'>
+Too Many Login Attempts
+</h2>
 
-            return f"Invalid Username or Password. Attempts left: {remaining}"
+<h3 style='text-align:center;'>
+Account Locked For 5 Minutes
+</h3>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/login'>Back to Login</a>
+</div>
+"""
+
+            return f"""
+<h2 style='text-align:center; color:red; margin-top:100px; font-size:32px;'>
+Invalid Username or Password
+</h2>
+
+<h3 style='text-align:center;'>
+Attempts Left: {remaining}
+</h3>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/login'>Try Again</a>
+</div>
+"""
 
     return render_template('login.html')
 
