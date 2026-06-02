@@ -26,9 +26,9 @@
 
 <nav class="navbar navbar-dark bg-dark">
     <div class="container">
-        <span class="navbar-brand">
-            🔐 Authentication System
-        </span>
+        <span class="navbar-brand fw-bold">
+    🔐 Secure Authentication System
+</span>
     </div>
 </nav>
 
@@ -36,7 +36,9 @@
 
 <div class="card p-5">
 
-    <h1>Welcome, {{ username }} 👋</h1>
+    <h1 class="fw-bold">
+    Welcome, {{ username }} 👋
+</h1>
 
     <p class="text-muted">
         Login Successful
@@ -44,21 +46,19 @@
 
     <hr>
 
-    <h5>Account Status</h5>
-
-    <p class="text-success">
-        Authenticated Successfully
-    </p>
+    <div class="alert alert-success">
+    <strong>Status:</strong> Authenticated Successfully
+</div>
 
     <a href="/change_password"
-   class="btn btn-primary mb-3">
+   class="btn btn-primary btn-lg mb-3">
     Change Password
 </a>
 
-    <a href="/logout"
-       class="btn btn-danger">
-        Logout
-    </a>
+<a href="/logout"
+   class="btn btn-danger btn-lg">
+    Logout
+</a>
 
 </div>
 
