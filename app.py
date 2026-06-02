@@ -160,6 +160,47 @@ def dashboard():
         )
     return redirect(url_for('login'))
 
+# Change Password
+@app.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+
+        user = User.query.filter_by(
+            username=session['username']
+        ).first()
+
+        # Verify Current Password
+        if not check_password_hash(
+            user.password,
+            current_password
+        ):
+            return "Current Password Incorrect"
+
+        # Check Password Match
+        if new_password != confirm_password:
+            return "Passwords Do Not Match"
+
+        # Update Password
+        user.password = generate_password_hash(
+            new_password
+        )
+
+        db.session.commit()
+
+        return "Password Updated Successfully"
+
+    return render_template(
+        'change_password.html'
+    )
+
 # Logout
 @app.route('/logout')
 def logout():
