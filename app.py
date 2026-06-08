@@ -43,8 +43,18 @@ def register():
         existing_user = User.query.filter_by(
             username=username
         ).first()
-        if existing_user:
-            return "Username Already Exists"
+        return """
+<h2 style='text-align:center;
+color:red;
+margin-top:100px;
+font-size:32px;'>
+Username Already Exists
+</h2>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/register'>Try Again</a>
+</div>
+"""
         # Hash Password
         hashed_password = generate_password_hash(password)
         # Create User
@@ -80,7 +90,22 @@ def login():
                     lock_until - datetime.now()
                 ).seconds
 
-                return f"Account locked. Try again in {remaining_time} seconds."
+                return f"""
+<h2 style='text-align:center;
+color:red;
+margin-top:100px;
+font-size:32px;'>
+Account Locked
+</h2>
+
+<h3 style='text-align:center;'>
+Try Again In {remaining_time} Seconds
+</h3>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/login'>Back To Login</a>
+</div>
+"""
 
             else:
                 session.pop('lock_until', None)
@@ -182,11 +207,33 @@ def change_password():
             user.password,
             current_password
         ):
-            return "Current Password Incorrect"
+            return """
+<h2 style='text-align:center;
+color:red;
+margin-top:100px;
+font-size:32px;'>
+Current Password Incorrect
+</h2>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/change_password'>Try Again</a>
+</div>
+"""
 
         # Check Password Match
         if new_password != confirm_password:
-            return "Passwords Do Not Match"
+            return """
+<h2 style='text-align:center;
+color:red;
+margin-top:100px;
+font-size:32px;'>
+Passwords Do Not Match
+</h2>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/change_password'>Try Again</a>
+</div>
+"""
 
         # Update Password
         user.password = generate_password_hash(
@@ -227,10 +274,32 @@ def forgot_password():
         ).first()
 
         if not user:
-            return "Username Not Found"
+            return """
+<h2 style='text-align:center;
+color:red;
+margin-top:100px;
+font-size:32px;'>
+Username Not Found
+</h2>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/forgot_password'>Try Again</a>
+</div>
+"""
 
         if new_password != confirm_password:
-            return "Passwords Do Not Match"
+            return """
+<h2 style='text-align:center;
+color:red;
+margin-top:100px;
+font-size:32px;'>
+Passwords Do Not Match
+</h2>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/forgot_password'>Try Again</a>
+</div>
+"""
 
         user.password = generate_password_hash(
             new_password
