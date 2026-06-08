@@ -36,14 +36,19 @@ def home():
 # Register Page
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+
     if request.method == 'POST':
+
         username = request.form['username']
         password = request.form['password']
+
         # Check Existing User
         existing_user = User.query.filter_by(
             username=username
         ).first()
-        return """
+
+        if existing_user:
+            return """
 <h2 style='text-align:center;
 color:red;
 margin-top:100px;
@@ -55,17 +60,24 @@ Username Already Exists
 <a href='/register'>Try Again</a>
 </div>
 """
+
         # Hash Password
-        hashed_password = generate_password_hash(password)
+        hashed_password = generate_password_hash(
+            password
+        )
+
         # Create User
         new_user = User(
             username=username,
             password=hashed_password
         )
+
         # Save User
         db.session.add(new_user)
         db.session.commit()
+
         return redirect(url_for('login'))
+
     return render_template('register.html')
 
 # Login Page
