@@ -195,10 +195,64 @@ def change_password():
 
         db.session.commit()
 
-        return "Password Updated Successfully"
+        return """
+<h2 style='text-align:center;
+color:green;
+margin-top:100px;
+font-size:32px;'>
+Password Updated Successfully
+</h2>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/dashboard'>Back To Dashboard</a>
+</div>
+"""
 
     return render_template(
         'change_password.html'
+    )
+
+# Forgot Password
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+
+    if request.method == 'POST':
+
+        username = request.form['username']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+
+        user = User.query.filter_by(
+            username=username
+        ).first()
+
+        if not user:
+            return "Username Not Found"
+
+        if new_password != confirm_password:
+            return "Passwords Do Not Match"
+
+        user.password = generate_password_hash(
+            new_password
+        )
+
+        db.session.commit()
+
+        return """
+<h2 style='text-align:center;
+color:green;
+margin-top:100px;
+font-size:32px;'>
+Password Reset Successfully
+</h2>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/login'>Go To Login</a>
+</div>
+"""
+
+    return render_template(
+        'forgot_password.html'
     )
 
 # Logout
