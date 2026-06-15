@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+import re
 
 app = Flask(__name__)
 
@@ -15,7 +16,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize Database
 db = SQLAlchemy(app)
 
-# User Table
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(
@@ -27,6 +27,15 @@ class User(db.Model):
         db.String(200),
         nullable=False
     )
+    role = db.Column(
+        db.String(20),
+        default='user'
+    )
+
+class LoginHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100))
+    login_time = db.Column(db.DateTime)
 
 # Home Page
 @app.route('/')
@@ -41,7 +50,17 @@ def register():
 
         username = request.form['username']
         password = request.form['password']
+        if not re.search("[A-Z]", password):
+            return "Password must contain an uppercase letter"
 
+        if not re.search("[0-9]", password):
+            return "Password must contain a number"
+
+        if not re.search("[@#$%^&*!]", password):
+            return "Password must contain a special character"
+        if len(password) < 8:
+            return "Password must be at least 8 characters"
+        
         # Check Existing User
         existing_user = User.query.filter_by(
             username=username
@@ -67,10 +86,16 @@ Username Already Exists
         )
 
         # Create User
+        if username == "admin":
+            role = "admin"
+        else:
+            role = "user"
+
         new_user = User(
-            username=username,
-            password=hashed_password
-        )
+        username=username,
+        password=hashed_password,
+        role=role
+)
 
         # Save User
         db.session.add(new_user)
@@ -140,6 +165,14 @@ Try Again In {remaining_time} Seconds
             # Reset Attempts
             session['login_attempts'] = 0
 
+            history = LoginHistory(
+                username=username,
+                login_time=datetime.now()
+            )
+
+            db.session.add(history)
+            db.session.commit()
+
             # Store Session
             session['username'] = username
 
@@ -190,12 +223,118 @@ Attempts Left: {remaining}
 # Dashboard
 @app.route('/dashboard')
 def dashboard():
+
     if 'username' in session:
+
+        last_login = LoginHistory.query.filter_by(
+            username=session['username']
+        ).order_by(
+            LoginHistory.id.desc()
+        ).first()
+
         return render_template(
             'dashboard.html',
-            username=session['username']
+            username=session['username'],
+            last_login=last_login
         )
+
     return redirect(url_for('login'))
+
+#Profile
+@app.route('/profile')
+def profile():
+
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = User.query.filter_by(
+        username=session['username']
+    ).first()
+
+    last_login = LoginHistory.query.filter_by(
+        username=session['username']
+    ).order_by(
+        LoginHistory.id.desc()
+    ).first()
+
+    return render_template(
+        'profile.html',
+        username=session['username'],
+        role=user.role,
+        last_login=last_login
+    )
+
+#Admin dashboard
+@app.route('/admin')
+def admin():
+
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = User.query.filter_by(
+        username=session['username']
+    ).first()
+
+    if user.role != 'admin':
+        return "Access Denied"
+
+    search = request.args.get('search', '')
+
+    if search:
+        users = User.query.filter(
+            User.username.contains(search)
+        ).all()
+    else:
+        users = User.query.all()
+
+    return render_template(
+        'admin.html',
+        users=users
+    )
+
+#Delete User
+@app.route('/delete_user/<int:id>')
+def delete_user(id):
+
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    current_user = User.query.filter_by(
+        username=session['username']
+    ).first()
+
+    if current_user.role != 'admin':
+        return "Access Denied"
+
+    user = User.query.get(id)
+
+    if user:
+
+        if user.username == "admin":
+            return "Admin cannot be deleted"
+
+        db.session.delete(user)
+        db.session.commit()
+
+    return redirect(url_for('admin'))
+
+#Login history
+@app.route('/history')
+def history():
+
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    logs = LoginHistory.query.filter_by(
+    username=session['username']
+).order_by(
+    LoginHistory.id.desc()
+).all()
+
+    return render_template(
+        'history.html',
+        logs=logs
+    )
 
 # Change Password
 @app.route('/change_password', methods=['GET', 'POST'])
@@ -246,6 +385,19 @@ Passwords Do Not Match
 <a href='/change_password'>Try Again</a>
 </div>
 """
+
+        # Password Strength Validation
+        if not re.search("[A-Z]", new_password):
+            return "Password must contain an uppercase letter"
+
+        if not re.search("[0-9]", new_password):
+            return "Password must contain a number"
+
+        if not re.search("[@#$%^&*!]", new_password):
+            return "Password must contain a special character"
+
+        if len(new_password) < 8:
+            return "Password must be at least 8 characters"
 
         # Update Password
         user.password = generate_password_hash(

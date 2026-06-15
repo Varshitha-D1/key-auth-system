@@ -13,11 +13,12 @@
     }
 
     .card{
-        margin-top:80px;
-        border:none;
-        border-radius:20px;
-        box-shadow:0px 10px 25px rgba(0,0,0,0.1);
-    }
+    margin-top:50px;
+    border:none;
+    border-radius:25px;
+    box-shadow:0px 15px 40px rgba(0,0,0,0.15);
+}
+    
 </style>
 
 
@@ -36,10 +37,30 @@
 
 <div class="card p-5">
 
+    <div class="text-center mb-4">
     <h1 class="fw-bold">
-    Welcome, {{ username }} 👋
-</h1>
+        Welcome, {{ username }} 👋
+    </h1>
 
+    <p class="text-muted">
+        Secure Authentication & User Management System
+    </p>
+    </div>
+<div class="alert alert-info mt-3">
+    <div class="row mb-4">
+
+
+</div>
+    <h5>Last Login</h5>
+
+    {% if last_login %}
+        <p class="mb-0">
+    {{ last_login.login_time.strftime('%d-%m-%Y %I:%M %p') }}
+</p>
+    {% else %}
+        <p>No login history available.</p>
+    {% endif %}
+</div>
     <p class="text-muted">
         Login Successful
     </p>
@@ -50,15 +71,34 @@
     <strong>Status:</strong> Authenticated Successfully
 </div>
 
-    <a href="/change_password"
-   class="btn btn-primary btn-lg mb-3">
-    Change Password
+<div class="d-grid gap-3">
+
+<a href="/profile"
+   class="btn btn-success btn-lg">
+    👤 Profile
+</a>
+
+<a href="/admin"
+   class="btn btn-warning btn-lg">
+    ⚙️ Admin Panel
+</a>
+
+<a href="/history"
+   class="btn btn-info btn-lg">
+    📜 Login History
+</a>
+
+<a href="/change_password"
+   class="btn btn-primary btn-lg">
+    🔑 Change Password
 </a>
 
 <a href="/logout"
    class="btn btn-danger btn-lg">
-    Logout
+    🚪 Logout
 </a>
+
+</div>
 
 </div>
 
