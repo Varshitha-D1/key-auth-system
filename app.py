@@ -86,15 +86,26 @@ Username Already Exists
         )
 
         # Create User
-        if username == "admin":
-            role = "admin"
-        else:
-            role = "user"
+        if username.lower() in ["admin", "superadmin"]:
+            return """
+<h2 style='text-align:center;
+color:red;
+margin-top:100px;
+font-size:32px;'>
+This Username Is Reserved
+</h2>
+
+<div style='text-align:center; margin-top:20px;'>
+<a href='/register'>Try Again</a>
+</div>
+"""
+
+        role = "user"
 
         new_user = User(
-        username=username,
-        password=hashed_password,
-        role=role
+            username=username,
+            password=hashed_password,
+            role=role
 )
 
         # Save User
@@ -310,8 +321,8 @@ def delete_user(id):
 
     if user:
 
-        if user.username == "admin":
-            return "Admin cannot be deleted"
+        if user.username in ["admin", "superadmin"]:
+            return "Admin accounts cannot be deleted"
 
         db.session.delete(user)
         db.session.commit()
@@ -432,6 +443,15 @@ def forgot_password():
         username = request.form['username']
         new_password = request.form['new_password']
         confirm_password = request.form['confirm_password']
+        security_code = request.form.get('security_code') 
+
+        if username.lower() == "admin":
+            if security_code != "1234":
+                return "Invalid Admin Security Code"
+
+        if username.lower() == "superadmin":
+            if security_code != "5678":
+                return "Invalid Admin Security Code"  
 
         user = User.query.filter_by(
             username=username
@@ -464,6 +484,18 @@ Passwords Do Not Match
 <a href='/forgot_password'>Try Again</a>
 </div>
 """
+
+        if not re.search("[A-Z]", new_password):
+            return "Password must contain an uppercase letter"
+
+        if not re.search("[0-9]", new_password):
+            return "Password must contain a number"
+
+        if not re.search("[@#$%^&*!]", new_password):
+            return "Password must contain a special character"
+
+        if len(new_password) < 8:
+            return "Password must be at least 8 characters"
 
         user.password = generate_password_hash(
             new_password
@@ -500,6 +532,39 @@ def logout():
         
 # Run Application
 if __name__ == '__main__':
+
     with app.app_context():
+
         db.create_all()
+
+        admin = User.query.filter_by(
+            username="admin"
+        ).first()
+
+        if not admin:
+
+            admin = User(
+                username="admin",
+                password=generate_password_hash("Admin@123"),
+                role="admin"
+            )
+
+            db.session.add(admin)
+
+        superadmin = User.query.filter_by(
+            username="superadmin"
+        ).first()
+
+        if not superadmin:
+
+            superadmin = User(
+                username="superadmin",
+                password=generate_password_hash("Super@123"),
+                role="admin"
+            )
+
+            db.session.add(superadmin)
+
+        db.session.commit()
+
     app.run(host='0.0.0.0', port=5000, debug=True)
